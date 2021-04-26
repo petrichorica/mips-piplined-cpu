@@ -4,7 +4,7 @@ module instruction_decode
         input [31:0] instruction,
         input [31:0] pc_in,
         input clk,
-        input [31:0] result_write,
+        input [31:0] write_result,
         input [4:0] write_addr,
         input register_write,
         output reg [31:0] rs,
@@ -19,11 +19,13 @@ module instruction_decode
 
     reg [31:0] reg_init [31:0];
     reg flag = 1'b1;
-    always @(flag)
+    initial
+    // always @(flag)
     begin:block1
     integer i;
-    for (i=0; i<32; i = i+1)
-        reg_init[0][31:0] = 32'b0000000000000000000000000000000;
+    for (i=0; i<32; i = i+1) begin
+        reg_init[i] = 32'b0000000000000000000000000000000;
+    end
     end
     
     reg [4:0] rs_addr;
@@ -31,6 +33,10 @@ module instruction_decode
     reg [5:0] op;
     always @(posedge clk)
     begin
+        if (register_write == 1) begin
+        reg_init[write_addr] = write_result;
+        end
+
         rs_addr = instruction[25:21];
         rt_addr = instruction[20:16];
         rd_addr = instruction[15:11];
@@ -38,10 +44,6 @@ module instruction_decode
 
         rs = reg_init[rs_addr];
         rt = reg_init[rt_addr];
-        
-        if (register_write == 1) begin
-            reg_init[write_addr] = result_write;
-        end
 
         op = instruction[31:26];
         if (op == 6'hc || op == 6'hd || op == 6'he) begin

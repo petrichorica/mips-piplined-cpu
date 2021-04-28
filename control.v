@@ -1,0 +1,164 @@
+`timescale 100fs/100fs
+module control
+    (
+        input [5:0] opcode,
+        input [5:0] funct,
+        output reg reg_write,
+        output reg mem_to_reg_write,
+        output reg mem_read,
+        output reg mem_write,
+        output reg branch,
+        output reg [3:0] alu_control,
+        output reg alu_source,
+        output reg alu_source_shift,  // alu_source_shift = 1 if rs is replaced by shamt
+        output reg reg_dst
+    );
+
+    always @(opcode or funct) begin
+        if (opcode == 6'h0 && funct != 6'h8) begin
+            reg_write <= 1;
+            mem_to_reg_write <= 0;
+            mem_read <= 0;
+            mem_write <= 0;
+            branch <= 0;
+            alu_source <= 0;
+            reg_dst <= 1;
+            case(funct)
+                // add
+                6'h20: alu_control <= 4'b0001;
+                // addu
+                6'h21: alu_control <= 4'b0001;
+                // sub
+                6'h22: alu_control <= 4'b0010;
+                // subu
+                6'h23: alu_control <= 4'b0010;
+                // and
+                6'h24: alu_control <= 4'b0011;
+                // or
+                6'h25: alu_control <= 4'b0100;
+                // xor 
+                6'h26: alu_control <= 4'b0101;
+                // nor
+                6'h27: alu_control <= 4'b0110;
+                // slt
+                6'h2a: alu_control <= 4'b0111;
+                // sll
+                6'h0: alu_control <= 4'b1000;
+                // sllv
+                6'h4: alu_control <= 4'b1000;
+                // srl
+                6'h2: alu_control <= 4'b1001;
+                // srlv
+                6'h6: alu_control <= 4'b1001;
+                // sra
+                6'h3: alu_control <= 4'b1010;
+                // srav
+                6'h7: alu_control <= 4'b1010;
+            endcase
+            if (funct == 0 || funct == 2 || funct == 3) begin
+                alu_source_shift <= 1;
+            end
+            else begin
+                alu_source_shift <= 0;
+            end
+        end
+        else begin
+            alu_source_shift <= 0;
+            case(opcode)
+                // addi
+                6'h8: begin 
+                    reg_write <= 1;
+                    mem_to_reg_write <= 0;
+                    mem_read <= 0;
+                    mem_write <= 0;
+                    branch <= 0;
+                    alu_control <= 4'b0001;
+                    alu_source <= 1;
+                    reg_dst <= 0;
+                end
+                // addiu
+                6'h9: begin
+                    reg_write <= 1;
+                    mem_to_reg_write <= 0;
+                    mem_read <= 0;
+                    mem_write <= 0;
+                    branch <= 0;
+                    alu_control <= 4'b0001;
+                    alu_source <= 1;
+                    reg_dst <= 0;
+                end
+                // andi
+                6'hc: begin
+                    reg_write <= 1;
+                    mem_to_reg_write <= 0;
+                    mem_read <= 0;
+                    mem_write <= 0;
+                    branch <= 0;
+                    alu_control <= 4'b0011;
+                    alu_source <= 1;
+                    reg_dst <= 0;
+                end
+                // ori
+                6'hd: begin
+                    reg_write <= 1;
+                    mem_to_reg_write <= 0;
+                    mem_read <= 0;
+                    mem_write <= 0;
+                    branch <= 0;
+                    alu_control <= 4'b0100;
+                    alu_source <= 1;
+                    reg_dst <= 0;
+                end
+                // xori
+                6'he: begin
+                    reg_write <= 1;
+                    mem_to_reg_write <= 0;
+                    mem_read <= 0;
+                    mem_write <= 0;
+                    branch <= 0;
+                    alu_control <= 4'b0101;
+                    alu_source <= 1;
+                    reg_dst <= 0;
+                end
+                // beq
+                6'h4: begin
+                    reg_write <= 0;
+                    mem_read <= 0;
+                    mem_write <= 0;
+                    branch <= 1;
+                    alu_control <= 4'b0010;
+                    alu_source <= 0;
+                end
+                // bne
+                6'h5: begin
+                    reg_write <= 0;
+                    mem_read <= 0;
+                    mem_write <= 0;
+                    branch <= 1;
+                    alu_control <= 4'b0010;
+                    alu_source <= 0;
+                end
+                // lw
+                6'h23: begin
+                    reg_write <= 1;
+                    mem_to_reg_write <= 1;
+                    mem_read <= 1;
+                    mem_write <= 0;
+                    branch <= 0;
+                    alu_control <= 4'b0001;
+                    alu_source <= 1;
+                    reg_dst <= 0;
+                end
+                // sw
+                6'h2b: begin
+                    reg_write <= 0;
+                    mem_read <= 0;
+                    mem_write <= 1;
+                    branch <= 0;
+                    alu_control <= 4'b0001;
+                    alu_source <= 1;
+                end
+            endcase
+        end
+    end
+endmodule

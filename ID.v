@@ -2,7 +2,7 @@
 module instruction_decode
     (
         input [31:0] instruction,
-        input [31:0] pc_in,
+        // input [31:0] pc_in,
         input clk,
         input [31:0] write_result,
         input [4:0] write_addr,
@@ -12,15 +12,15 @@ module instruction_decode
         output reg [4:0] rt_addr,
         output reg [4:0] rd_addr,
         output reg [31:0] extended_imm,
-        output [31:0] pc_out
+        output reg [4:0] shamt
+        // output [31:0] pc_out
     );
 
-    assign pc_out = pc_in;
+    // assign pc_out = pc_in;
 
     reg [31:0] reg_init [31:0];
     reg flag = 1'b1;
     initial
-    // always @(flag)
     begin:block1
     integer i;
     for (i=0; i<32; i = i+1) begin
@@ -41,6 +41,7 @@ module instruction_decode
         rt_addr = instruction[20:16];
         rd_addr = instruction[15:11];
         imm = instruction[15:0];
+        shamt = instruction[10:6];
 
         rs = reg_init[rs_addr];
         rt = reg_init[rt_addr];

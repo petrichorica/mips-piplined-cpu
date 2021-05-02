@@ -17,7 +17,7 @@ module alu_test;
     wire [4:0] write_reg_addr;
     wire [31:0] pc_branch;
 
-    alu at(rs, rt, shamt, rt_addr, rd_addr, imm, pc, alu_control, alu_source, 
+    Alu at(rs, rt, shamt, rt_addr, rd_addr, imm, pc, alu_control, alu_source, 
         alu_source_shift, reg_dst, zero, alu_out, write_data, write_reg_addr, pc_branch);
 
     always

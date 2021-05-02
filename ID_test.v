@@ -13,7 +13,7 @@ module id_test;
     wire [31:0] extended_imm;
     wire [31:0] pc_out;
 
-    instruction_decode id_block(instruction, pc, clk, write_result, write_addr, register_write, rs, rt, rt_addr, rd_addr, extended_imm, pc_out);
+    Instruction_decode id_block(instruction, pc, clk, write_result, write_addr, register_write, rs, rt, rt_addr, rd_addr, extended_imm, pc_out);
     always #10 clk = ~clk;
     always
     begin

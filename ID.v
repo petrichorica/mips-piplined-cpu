@@ -9,10 +9,10 @@ module Instruction_decode
         input register_write,
         output reg [31:0] rs,
         output reg [31:0] rt,
-        output reg [4:0] rt_addr,
-        output reg [4:0] rd_addr,
+        output wire [4:0] rt_addr,
+        output wire [4:0] rd_addr,
         output reg [31:0] extended_imm,
-        output reg [4:0] shamt
+        output wire [4:0] shamt
         // output [31:0] pc_out
     );
 
@@ -28,30 +28,35 @@ module Instruction_decode
     end
     end
     
-    reg [4:0] rs_addr;
-    reg [15:0] imm;
-    reg [5:0] op;
+    wire [4:0] rs_addr;
+    wire [15:0] imm;
+    wire [5:0] op;
+
+    assign op = instruction[31:26];
+    assign rs_addr = instruction[25:21];
+    assign rt_addr = instruction[20:16];
+    assign rd_addr = instruction[15:11];
+    assign imm = instruction[15:0];
+    assign shamt = instruction[10:6];
+
     always @(posedge clk)
     begin
-        if (register_write == 1 && write_addr != 0) begin
-        reg_init[write_addr] = write_result;
+        begin
+            if (register_write == 1'b1 && write_addr != 1'b0) begin
+            reg_init[write_addr] <= write_result;
+            end
         end
 
-        rs_addr = instruction[25:21];
-        rt_addr = instruction[20:16];
-        rd_addr = instruction[15:11];
-        imm = instruction[15:0];
-        shamt = instruction[10:6];
+        begin
+            rs <= reg_init[rs_addr];
+            rt <= reg_init[rt_addr];
 
-        rs = reg_init[rs_addr];
-        rt = reg_init[rt_addr];
-
-        op = instruction[31:26];
-        if (op == 6'hc || op == 6'hd || op == 6'he) begin
-            extended_imm = {{16{1'b0}}, imm};
-        end
-        else begin
-            extended_imm = {{16{imm[15]}}, imm};
+            if (op == 6'hc || op == 6'hd || op == 6'he) begin
+                extended_imm <= {{16{1'b0}}, imm};
+            end
+            else begin
+                extended_imm <= {{16{imm[15]}}, imm};
+            end
         end
     end
 

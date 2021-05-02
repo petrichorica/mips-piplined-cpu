@@ -3,7 +3,7 @@ module control_test;
     reg [31:0] instruction;
     wire reg_write;
     wire mem_to_reg_write;
-    wire mem_read;
+    // wire mem_read;
     wire mem_write;
     wire branch;
     wire [3:0] alu_control;
@@ -11,17 +11,12 @@ module control_test;
     wire alu_source_shift;  // alu_source_shift = 1 if rs is replaced by shamt
     wire reg_dst;
 
-    wire [5:0] opcode;
-    wire [5:0] funct;
 
-    assign opcode = instruction[31:26];
-    assign funct = instruction[5:0];
-
-    control ct(opcode, funct, reg_write, mem_to_reg_write, mem_read, mem_write, branch, alu_control, alu_source, alu_source_shift, reg_dst);
+    Control ct(instruction, reg_write, mem_to_reg_write, mem_write, branch, alu_control, alu_source, alu_source_shift, reg_dst);
     always
     begin
-        $monitor("%t,  %b,  %b,  %b,  %b,  %b,  %b,  %b,  %b,  %b", 
-                $realtime, ct.reg_write, ct.mem_to_reg_write, ct.mem_read, ct.mem_write, ct.branch, ct.alu_control, ct.alu_source, ct.alu_source_shift, ct.reg_dst);
+        $monitor("%t,  %b,  %b,  %b,  %b,  %b,  %b,  %b,  %b", 
+                $realtime, reg_write, mem_to_reg_write, mem_write, branch, alu_control, alu_source, alu_source_shift, reg_dst);
         #8
             instruction <= 32'b000000_00001_01010_00110_00000_100000;  // add
         #10

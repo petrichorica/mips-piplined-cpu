@@ -1,5 +1,5 @@
 `timescale 100fs/100fs
-module instruction_decode
+module Instruction_decode
     (
         input [31:0] instruction,
         // input [31:0] pc_in,
@@ -33,7 +33,7 @@ module instruction_decode
     reg [5:0] op;
     always @(posedge clk)
     begin
-        if (register_write == 1) begin
+        if (register_write == 1 && write_addr != 0) begin
         reg_init[write_addr] = write_result;
         end
 

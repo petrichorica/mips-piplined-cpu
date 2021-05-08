@@ -23,13 +23,14 @@ module Pipline
     // reg_writeW is defined in WB block
     wire [31:0] rsD;
     wire [31:0] rtD;
+    wire [4:0] rs_addrD;
     wire [4:0] rt_addrD;
     wire [4:0] rd_addrD;
     wire [31:0] extended_immD;
     wire [4:0] shamtD;
 
     Instruction_decode reg_d(instrD, clk, write_resultW, write_reg_addrW, reg_writeW, rsD, rtD, 
-                            rt_addrD, rd_addrD, extended_immD, shamtD);
+                            rs_addrD, rt_addrD, rd_addrD, extended_immD, shamtD);
     
     // Control unit
     wire reg_writeD;
@@ -67,6 +68,7 @@ module Pipline
     reg [31:0] rsE;  // reg1
     reg [31:0] rtE;  // reg2
     reg [4:0] shamtE;  // shift amount
+    reg [4:0] rs_addrE;
     reg [4:0] rt_addrE;
     reg [4:0] rd_addrE;
     reg [31:0] immE;
@@ -77,9 +79,15 @@ module Pipline
     wire [4:0] write_reg_addrE;
     wire [31:0] pc_branchE;
 
-    Alu alu_ex(rsE, rtE, shamtE, rt_addrE, rd_addrE, immE, pcE, alu_controlE, 
-            alu_sourceE, alu_source_shiftE, reg_dstE, zeroE, alu_outE, write_dataE, 
-            write_reg_addrE, pc_branchE);
+    // Forwarding multiplexer
+    reg [1:0] fw_alu1 = 2'b0;
+    reg [1:0] fw_alu2 = 2'b0;
+    Hazard_unit hazard(reg_writeW, write_reg_addrW, reg_writeM, write_reg_addrM, 
+                    rs_addrE, rt_addrE, fw_alu1, fw_alu2);
+
+    Alu alu_ex(rsE, rtE, shamtE, alu_outM, write_resultW, rt_addrE, rd_addrE, immE, 
+            pcE, alu_controlE, alu_sourceE, alu_source_shiftE, reg_dstE, 
+            fw_alu1, fw_alu2, zeroE, alu_outE, write_dataE, write_reg_addrE, pc_branchE);
     
     always @(negedge clk) begin
         reg_writeE <= reg_writeD;
@@ -93,7 +101,9 @@ module Pipline
 
         rsE <= rsD;
         rtE <= rtD;
+
         shamtE <= shamtD;
+        rs_addrE <= rs_addrD;
         rt_addrE <= rt_addrD;
         immE <= extended_immD;
         pcE <= pcD;

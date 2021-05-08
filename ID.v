@@ -42,7 +42,7 @@ module Instruction_decode
     always @(posedge clk)
     begin
         begin
-            if (register_write == 1'b1 && write_addr != 1'b0) begin
+            if (register_write == 1'b1 && write_addr != 5'b0) begin
             reg_init[write_addr] <= write_result;
             end
         end

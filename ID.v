@@ -9,6 +9,7 @@ module Instruction_decode
         input register_write,
         output reg [31:0] rs,
         output reg [31:0] rt,
+        output wire [4:0] rs_addr,
         output wire [4:0] rt_addr,
         output wire [4:0] rd_addr,
         output reg [31:0] extended_imm,
@@ -28,7 +29,6 @@ module Instruction_decode
     end
     end
     
-    wire [4:0] rs_addr;
     wire [15:0] imm;
     wire [5:0] op;
 

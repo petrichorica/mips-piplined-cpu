@@ -35,7 +35,7 @@ module Pipline
     // Control unit
     wire reg_writeD;
     wire mem_to_reg_writeD;
-    // wire mem_readD;
+    wire mem_readD;
     wire mem_writeD;
     wire branchD;
     wire [3:0] alu_controlD;
@@ -43,8 +43,8 @@ module Pipline
     wire alu_source_shiftD;  // alu_source_shift = 1 if rs is replaced by shamt
     wire reg_dstD;
 
-    Control control(instrD, reg_writeD, mem_to_reg_writeD, mem_writeD, branchD, 
-                    alu_controlD, alu_sourceD, alu_source_shiftD, reg_dstD);
+    Control control(instrD, reg_writeD, mem_to_reg_writeD, mem_readD, mem_writeD, 
+                    branchD, alu_controlD, alu_sourceD, alu_source_shiftD, reg_dstD);
 
     reg [31:0] pcD;
     always @(negedge clk) begin
@@ -56,7 +56,7 @@ module Pipline
     // Control signal
     reg reg_writeE;
     reg mem_to_reg_writeE;
-    // reg mem_readE;
+    reg mem_readE;
     reg mem_writeE;
     reg branchE;
     reg [3:0] alu_controlE;
@@ -92,6 +92,7 @@ module Pipline
     always @(negedge clk) begin
         reg_writeE <= reg_writeD;
         mem_to_reg_writeE <= mem_to_reg_writeD;
+        mem_readE <= mem_readD;
         mem_writeE <= mem_writeD;
         branchE <= branchD;
         alu_controlE <= alu_controlD;

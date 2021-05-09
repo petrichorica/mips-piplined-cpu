@@ -4,7 +4,7 @@ module Control
         input [31:0] instruction,
         output reg reg_write,
         output reg mem_to_reg_write,
-        // output reg mem_read,
+        output reg mem_read,
         output reg mem_write,
         output reg branch,
         output reg [3:0] alu_control,
@@ -22,7 +22,7 @@ module Control
         if (opcode == 6'h0 && funct != 6'h8) begin
             reg_write <= 1'b1;
             mem_to_reg_write <= 1'b0;
-            // mem_read <= 1'b0;
+            mem_read <= 1'b0;
             mem_write <= 1'b0;
             branch <= 1'b0;
             alu_source <= 1'b0;
@@ -73,7 +73,7 @@ module Control
                 6'h8: begin 
                     reg_write <= 1'b1;
                     mem_to_reg_write <= 1'b0;
-                    // mem_read <= 1'b0;
+                    mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
                     alu_control <= 4'b0001;
@@ -84,7 +84,7 @@ module Control
                 6'h9: begin
                     reg_write <= 1'b1;
                     mem_to_reg_write <= 1'b0;
-                    // mem_read <= 1'b0;
+                    mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
                     alu_control <= 4'b0001;
@@ -95,7 +95,7 @@ module Control
                 6'hc: begin
                     reg_write <= 1'b1;
                     mem_to_reg_write <= 1'b0;
-                    // mem_read <= 1'b0;
+                    mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
                     alu_control <= 4'b0011;
@@ -106,7 +106,7 @@ module Control
                 6'hd: begin
                     reg_write <= 1'b1;
                     mem_to_reg_write <= 1'b0;
-                    // mem_read <= 1'b0;
+                    mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
                     alu_control <= 4'b0100;
@@ -117,7 +117,7 @@ module Control
                 6'he: begin
                     reg_write <= 1'b1;
                     mem_to_reg_write <= 1'b0;
-                    // mem_read <= 1'b0;
+                    mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
                     alu_control <= 4'b0101;
@@ -127,7 +127,7 @@ module Control
                 // beq
                 6'h4: begin
                     reg_write <= 1'b0;
-                    // mem_read <= 1'b0;
+                    mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b1;
                     alu_control <= 4'b0010;
@@ -136,7 +136,7 @@ module Control
                 // bne
                 6'h5: begin
                     reg_write <= 1'b0;
-                    // mem_read <= 1'b0;
+                    mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b1;
                     alu_control <= 4'b0010;
@@ -146,7 +146,7 @@ module Control
                 6'h23: begin
                     reg_write <= 1'b1;
                     mem_to_reg_write <= 1'b1;
-                    // mem_read <= 1'b1;
+                    mem_read <= 1'b1;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
                     alu_control <= 4'b0001;
@@ -156,7 +156,7 @@ module Control
                 // sw
                 6'h2b: begin
                     reg_write <= 1'b0;
-                    // mem_read <= 1'b0;
+                    mem_read <= 1'b0;
                     mem_write <= 1'b1;
                     branch <= 1'b0;
                     alu_control <= 4'b0001;

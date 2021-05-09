@@ -19,13 +19,13 @@ module Instruction_decode
 
     // assign pc_out = pc_in;
 
-    reg [31:0] reg_init [31:0];
+    reg [31:0] reg_value [31:0];
     reg flag = 1'b1;
     initial
     begin:block1
     integer i;
     for (i=0; i<32; i = i+1) begin
-        reg_init[i] = 32'b0000000000000000000000000000000;
+        reg_value[i] = 32'b0000000000000000000000000000000;
     end
     end
     
@@ -39,17 +39,23 @@ module Instruction_decode
     assign imm = instruction[15:0];
     assign shamt = instruction[10:6];
 
+    always @(register_write, write_addr, write_result) begin
+        if (register_write == 1'b1 && write_addr != 5'b0) begin
+            reg_value[write_addr] <= write_result;
+        end
+    end
+
     always @(posedge clk)
     begin
-        begin
-            if (register_write == 1'b1 && write_addr != 5'b0) begin
-            reg_init[write_addr] <= write_result;
-            end
-        end
+        // begin
+        //     if (register_write == 1'b1 && write_addr != 5'b0) begin
+        //     reg_value[write_addr] <= write_result;
+        //     end
+        // end
 
-        begin
-            rs <= reg_init[rs_addr];
-            rt <= reg_init[rt_addr];
+        // begin
+            rs <= reg_value[rs_addr];
+            rt <= reg_value[rt_addr];
 
             if (op == 6'hc || op == 6'hd || op == 6'he) begin
                 extended_imm <= {{16{1'b0}}, imm};
@@ -57,7 +63,7 @@ module Instruction_decode
             else begin
                 extended_imm <= {{16{imm[15]}}, imm};
             end
-        end
+        // end
     end
 
 endmodule

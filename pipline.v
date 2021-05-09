@@ -80,8 +80,8 @@ module Pipline
     wire [31:0] pc_branchE;
 
     // Forwarding multiplexer
-    reg [1:0] fw_alu1 = 2'b0;
-    reg [1:0] fw_alu2 = 2'b0;
+    wire [1:0] fw_alu1;
+    wire [1:0] fw_alu2;
     Hazard_unit hazard(reg_writeW, write_reg_addrW, reg_writeM, write_reg_addrM, 
                     rs_addrE, rt_addrE, fw_alu1, fw_alu2);
 
@@ -105,6 +105,7 @@ module Pipline
         shamtE <= shamtD;
         rs_addrE <= rs_addrD;
         rt_addrE <= rt_addrD;
+        rd_addrE <= rd_addrD;
         immE <= extended_immD;
         pcE <= pcD;
     end

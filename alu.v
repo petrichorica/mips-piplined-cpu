@@ -30,7 +30,10 @@ module Alu
     begin
         pc_branch <= pc + (imm << 2'd2);
         write_reg_addr <= (reg_dst == 1'b1) ? rd_addr : rt_addr;
-        write_data <= rt;
+        // write_data <= rt;
+        write_data <= (fw_alu2 == 2'b10) ? alu_outM :
+                    (fw_alu2 == 2'b01) ? write_resultW :
+                    rt;
         oprA <= (alu_source_shift == 1'b1) ? {27'b0, shamt} :
                 (fw_alu1 == 2'b10) ? alu_outM :
                 (fw_alu1 == 2'b01) ? write_resultW : 

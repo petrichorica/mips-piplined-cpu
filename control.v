@@ -2,6 +2,7 @@
 module Control
     (
         input [31:0] instruction,
+        input control_mux,
         output reg reg_write,
         output reg mem_to_reg_write,
         output reg mem_read,
@@ -19,6 +20,19 @@ module Control
     assign funct = instruction[5:0];
 
     always @(instruction) begin
+        if (~control_mux) begin
+            reg_write <= 1'b0;
+            mem_to_reg_write <= 1'b0;
+            mem_read <= 1'b0;
+            mem_write <= 1'b0;
+            branch <= 1'b0;
+            alu_control <= 4'b0;
+            alu_source <= 1'b0;
+            alu_source_shift <= 1'b0;
+            reg_dst <= 1'b0;
+        end
+        
+        else
         if (opcode == 6'h0 && funct != 6'h8) begin
             reg_write <= 1'b1;
             mem_to_reg_write <= 1'b0;

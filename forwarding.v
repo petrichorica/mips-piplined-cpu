@@ -1,5 +1,5 @@
 `timescale 100fs/100fs
-module Hazard_unit
+module Forwarding
     (
         input reg_writeW,
         input [4:0] write_reg_addrW,
@@ -14,6 +14,8 @@ module Hazard_unit
         // 10: EX forwarding
         // 01: MEM forwarding
     );
+
+    // Generate forwarding signal
     always @(*) begin
         if (reg_writeM == 1'b1 && write_reg_addrM != 5'b0 
             && write_reg_addrM == rs_addrE)

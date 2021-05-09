@@ -10,10 +10,15 @@ module Pipline
 
     /* IF */
     wire [31:0] instruction;
-    InstructionRAM i_mem(clk, 1'b0, 1'b1, pc_in_word, instruction);
+    reg pc_enable = 1'b1;
+    reg instr_enable = 1'b1;
+    
     always @(negedge clk) begin
-        pcF <= pcF + 32'd4;
+        if (pc_enable) begin
+            pcF <= pcF + 32'd4;
+        end
     end
+    InstructionRAM i_mem(clk, 1'b0, instr_enable, pc_in_word, instruction);
 
     /* ID */
     // Register file & imm extend
@@ -43,7 +48,9 @@ module Pipline
     wire alu_source_shiftD;  // alu_source_shift = 1 if rs is replaced by shamt
     wire reg_dstD;
 
-    Control control(instrD, reg_writeD, mem_to_reg_writeD, mem_readD, mem_writeD, 
+    reg control_mux = 1'b1;  // used for stalling
+
+    Control control(instrD, control_mux, reg_writeD, mem_to_reg_writeD, mem_readD, mem_writeD, 
                     branchD, alu_controlD, alu_sourceD, alu_source_shiftD, reg_dstD);
 
     reg [31:0] pcD;
@@ -82,7 +89,7 @@ module Pipline
     // Forwarding multiplexer
     wire [1:0] fw_alu1;
     wire [1:0] fw_alu2;
-    Hazard_unit hazard(reg_writeW, write_reg_addrW, reg_writeM, write_reg_addrM, 
+    Forwarding forwarding(reg_writeW, write_reg_addrW, reg_writeM, write_reg_addrM, 
                     rs_addrE, rt_addrE, fw_alu1, fw_alu2);
 
     Alu alu_ex(rsE, rtE, shamtE, alu_outM, write_resultW, rt_addrE, rd_addrE, immE, 
@@ -160,5 +167,17 @@ module Pipline
         alu_outW <= alu_outM;
         read_dataW <= read_dataM;
         write_reg_addrW <= write_reg_addrM;
+    end
+
+    /* hazard detection */
+    wire pc_enable_w;
+    wire instr_enable_w;
+    wire control_mux_w;
+    Hazard hazard(mem_readE, rt_addrE, rs_addrD, rt_addrD, 
+                pc_enable_w, instr_enable_w, control_mux_w);
+    always @(pc_enable_w, instr_enable_w, control_mux_w) begin
+        pc_enable <= pc_enable_w;
+        instr_enable <= instr_enable_w;
+        control_mux <= control_mux_w;
     end
 endmodule

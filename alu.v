@@ -1,14 +1,14 @@
 `timescale 100fs/100fs
 module Alu
     (   
-        input [31:0] rs,  // reg1
-        input [31:0] rt,  // reg2
+        input signed [31:0] rs,  // reg1
+        input signed [31:0] rt,  // reg2
         input [4:0] shamt,  // shift amount
-        input [31:0] alu_outM,
-        input [31:0] write_resultW,
+        input signed [31:0] alu_outM,
+        input signed [31:0] write_resultW,
         input [4:0] rt_addr,
         input [4:0] rd_addr,
-        input [31:0] imm,
+        input signed [31:0] imm,
         input [31:0] pc,
         input [3:0] alu_control,
         input alu_source,
@@ -17,14 +17,14 @@ module Alu
         input [1:0] fw_alu1,  // Forwarding multiplexer 1
         input [1:0] fw_alu2,  // Forwarding multiplexer 2
         output reg zero,
-        output reg [31:0] alu_out,
-        output reg [31:0] write_data,  // The 32-bit data to be write into the memory
+        output reg signed [31:0] alu_out,
+        output reg signed [31:0] write_data,  // The 32-bit data to be write into the memory
         output reg [4:0] write_reg_addr,
         output reg [31:0] pc_branch
     );
 
-    reg [31:0] oprA;  // Operand A
-    reg [31:0] oprB;  // Operand B
+    reg signed [31:0] oprA;  // Operand A
+    reg signed [31:0] oprB;  // Operand B
     always @(rs, rt, shamt, alu_outM, write_resultW, rt_addr, rd_addr, imm, pc, 
             alu_source, alu_source_shift, reg_dst, fw_alu1, fw_alu2)
     begin

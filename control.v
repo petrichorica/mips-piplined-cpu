@@ -8,9 +8,14 @@ module Control
         output reg mem_read,
         output reg mem_write,
         output reg branch,
+        output reg branch_eq,  // branch_eq = 1 if beq; branch_eq = 0 if bne.
+        output reg jump,
+        output reg link,  // For jal instruction
+        output reg jr,  // For jr instruction
+        output [25:0] target,
         output reg [3:0] alu_control,
         output reg alu_source,
-        output reg alu_source_shift,  // alu_source_shift = 1 if rs is replaced by shamt
+        output reg alu_source_shift,  // alu_source_shift = 1 if rs is replaced by shamt.
         output reg reg_dst
     );
 
@@ -18,6 +23,7 @@ module Control
     wire [5:0] funct;
     assign opcode = instruction[31:26];
     assign funct = instruction[5:0];
+    assign target = instruction[25:0];
 
     always @(instruction) begin
         if (~control_mux) begin
@@ -26,12 +32,16 @@ module Control
             mem_read <= 1'b0;
             mem_write <= 1'b0;
             branch <= 1'b0;
+            branch_eq <= 1'b0;
+            jump <= 1'b0;
+            link <= 1'b0;
+            jr <= 1'b0;
             alu_control <= 4'b0;
             alu_source <= 1'b0;
             alu_source_shift <= 1'b0;
             reg_dst <= 1'b0;
         end
-        
+
         else
         if (opcode == 6'h0 && funct != 6'h8) begin
             reg_write <= 1'b1;
@@ -39,6 +49,18 @@ module Control
             mem_read <= 1'b0;
             mem_write <= 1'b0;
             branch <= 1'b0;
+            branch_eq <= 1'b0;
+
+            if (funct == 6'h8) begin  // jr
+                jump <= 1'b1;
+                link <= 1'b0;
+                jr <= 1'b1;
+            end
+            else begin
+                jump <= 1'b0;
+            end
+
+            link <= 1'b0;
             alu_source <= 1'b0;
             reg_dst <= 1'b1;
             case(funct)
@@ -73,6 +95,7 @@ module Control
                 // srav
                 6'h7: alu_control <= 4'b1010;
             endcase
+
             if (funct == 6'h0 || funct == 6'h2 || funct == 6'h3) begin
                 alu_source_shift <= 1'b1;
             end
@@ -80,6 +103,7 @@ module Control
                 alu_source_shift <= 1'b0;
             end
         end
+
         else begin
             alu_source_shift <= 1'b0;
             case(opcode)
@@ -90,6 +114,7 @@ module Control
                     mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
+                    jump <= 1'b0;
                     alu_control <= 4'b0001;
                     alu_source <= 1'b1;
                     reg_dst <= 1'b0;
@@ -101,6 +126,7 @@ module Control
                     mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
+                    jump <= 1'b0;
                     alu_control <= 4'b0001;
                     alu_source <= 1'b1;
                     reg_dst <= 1'b0;
@@ -112,6 +138,7 @@ module Control
                     mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
+                    jump <= 1'b0;
                     alu_control <= 4'b0011;
                     alu_source <= 1'b1;
                     reg_dst <= 1'b0;
@@ -123,6 +150,7 @@ module Control
                     mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
+                    jump <= 1'b0;
                     alu_control <= 4'b0100;
                     alu_source <= 1'b1;
                     reg_dst <= 1'b0;
@@ -134,6 +162,7 @@ module Control
                     mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
+                    jump <= 1'b0;
                     alu_control <= 4'b0101;
                     alu_source <= 1'b1;
                     reg_dst <= 1'b0;
@@ -144,6 +173,7 @@ module Control
                     mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b1;
+                    jump <= 1'b0;
                     alu_control <= 4'b0010;
                     alu_source <= 1'b0;
                 end
@@ -153,6 +183,7 @@ module Control
                     mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b1;
+                    jump <= 1'b0;
                     alu_control <= 4'b0010;
                     alu_source <= 1'b0;
                 end
@@ -163,6 +194,7 @@ module Control
                     mem_read <= 1'b1;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
+                    jump <= 1'b0;
                     alu_control <= 4'b0001;
                     alu_source <= 1'b1;
                     reg_dst <= 1'b0;
@@ -173,10 +205,37 @@ module Control
                     mem_read <= 1'b0;
                     mem_write <= 1'b1;
                     branch <= 1'b0;
+                    jump <= 1'b0;
                     alu_control <= 4'b0001;
                     alu_source <= 1'b1;
                 end
+                // j
+                6'h2: begin
+                    reg_write <= 1'b0;
+                    mem_read <= 1'b0;
+                    mem_write <= 1'b0;
+                    branch <= 1'b0;
+                    jump <= 1'b1;
+                    link <= 1'b0;
+                    jr <= 1'b0;
+                end
+                // jal
+                6'h3: begin
+                    reg_write <= 1'b0;
+                    mem_read <= 1'b0;
+                    mem_write <= 1'b0;
+                    branch <= 1'b0;
+                    jump <= 1'b1;
+                    link <= 1'b1;
+                    jr <= 1'b0;
+                end
             endcase
+            if (opcode == 6'h4) begin  // beq
+                branch_eq <= 1'b1;
+            end
+            else begin
+                branch_eq <= 1'b0;
+            end
         end
     end
 endmodule

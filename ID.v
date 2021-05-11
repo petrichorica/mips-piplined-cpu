@@ -2,22 +2,25 @@
 module Instruction_decode
     (
         input [31:0] instruction,
-        // input [31:0] pc_in,
+        input [31:0] pc,
         input clk,
-        input [31:0] write_result,
+        input signed [31:0] write_result,
         input [4:0] write_addr,
         input register_write,
-        output reg [31:0] rs,
-        output reg [31:0] rt,
+
+        // For jal instruction
+        input jumpD,
+        input linkD,
+
+        output reg signed [31:0] rs,
+        output reg signed [31:0] rt,
         output wire [4:0] rs_addr,
         output wire [4:0] rt_addr,
         output wire [4:0] rd_addr,
-        output reg [31:0] extended_imm,
-        output wire [4:0] shamt
-        // output [31:0] pc_out
+        output reg signed [31:0] extended_imm,
+        output wire [4:0] shamt,
+        output reg [31:0] pc_branch
     );
-
-    // assign pc_out = pc_in;
 
     reg [31:0] reg_value [31:0];
     reg flag = 1'b1;
@@ -39,12 +42,21 @@ module Instruction_decode
     assign imm = instruction[15:0];
     assign shamt = instruction[10:6];
 
+    // Write back
     always @(register_write, write_addr, write_result) begin
         if (register_write == 1'b1 && write_addr != 5'b0) begin
             reg_value[write_addr] <= write_result;
         end
     end
 
+    // jal: Save the address of the next instruction in register $ra 
+    always @(jumpD, linkD) begin
+        if (jumpD && linkD) begin
+            reg_value[31] <= pc;
+        end
+    end
+
+    // Read
     always @(posedge clk)
     begin
         // begin
@@ -64,6 +76,10 @@ module Instruction_decode
                 extended_imm <= {{16{imm[15]}}, imm};
             end
         // end
+    end
+
+    always @(extended_imm) begin
+        pc_branch <= (extended_imm << 2) + pc;
     end
 
 endmodule

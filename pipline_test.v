@@ -1,16 +1,31 @@
 `timescale 100fs/100fs
 module Pipline_test;
     reg clk = 1'b1;
+    reg finish = 1'b0;
     Pipline pipline(clk);
 
     always #10 clk <= ~clk;
 
-    always begin
-    $monitor("%t,  %h,  %h,  %h,  %h,  %h,  %h,  %h,  %h,  %h", $realtime, pipline.instruction, 
-            pipline.alu_outE, pipline.fw_alu1, pipline.fw_alu2, 
-            pipline.alu_ex.oprA, pipline.alu_ex.oprB, 
-            pipline.alu_ex.rd_addr, pipline.write_reg_addrM, pipline.rs_addrE);
+    always @(pipline.instrM) begin
+        if (pipline.instrM == 32'hffffffff) begin
+            finish <= 1'b1;
+        end
+    end
 
-    #200 $finish;
+    // always begin
+    // $monitor("%t,  %h,  %d", $realtime, pipline.instrE, pipline.alu_outE);
+
+    // #400 $finish;
+    // end
+
+    always @(finish) begin
+        if (finish) begin : display
+            integer i;
+            $display("The top 30 rows of the Main Memory:");
+            for (i=0; i<30; i=i+1) begin
+                $display("%b", pipline.memory.DATA_RAM[i]);
+            end
+            $finish;
+        end
     end
 endmodule

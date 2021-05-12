@@ -19,7 +19,7 @@ module Pipline
         pcF <= pc_tmp;
     end
 
-    always @(pcF, pc_branchD) begin
+    always @(pc_enable, pc_src, pcF, pc_branchD, jump_addrD) begin
         if (pc_enable) begin
             if (pc_src) begin
                 pc_tmp <= pc_branchD;
@@ -64,7 +64,7 @@ module Pipline
 
     always @(negedge clk) begin
         if (instr_enable) begin
-            if (branchD || jumpD) begin
+            if (pc_src || jumpD) begin
                 // Flush
                 instrD <= 32'b0;
             end
@@ -98,7 +98,7 @@ module Pipline
                     alu_controlD, alu_sourceD, alu_source_shiftD, reg_dstD);
 
     wire [31:0] jump_addrD;
-    Jump jump_mux(jrD, rsD, target, jump_addrD);
+    Jump jump_mux(jrD, rsD, target, fw_rd1, alu_outE, alu_outM, jump_addrD);
 
     /* EX */
     // Control signal
@@ -168,6 +168,7 @@ module Pipline
     // Control signal
     reg reg_writeM;
     reg mem_to_reg_writeM;
+    reg mem_readM;
     reg mem_writeM;
     reg branchM;
 
@@ -175,6 +176,7 @@ module Pipline
     reg [31:0] instrM;
 
     // Data
+    reg [4:0] rt_addrM;
     reg zeroM;
     reg signed [31:0] alu_outM;
     reg signed [31:0] write_dataM;  // The 32-bit data to be write into the memory
@@ -187,8 +189,10 @@ module Pipline
     MainMemory memory(clk, 1'b0, 1'b1, r_addr_in_word, {mem_writeM, r_addr_in_word, write_dataM}, read_dataM);
 
     always @(negedge clk) begin
+        rt_addrM <= rt_addrE;
         reg_writeM <= reg_writeE;
         mem_to_reg_writeM <= mem_to_reg_writeE;
+        mem_readM <= mem_readE;
         mem_writeM <= mem_writeE;
         branchM <= branchE;
         zeroM <= zeroE;
@@ -229,24 +233,24 @@ module Pipline
     wire instr_enable_w;
     wire control_mux_w;
 
-    Hazard hazard(mem_readE, rt_addrE, rs_addrD, rt_addrD, pc_src, jumpD,
-                pc_enable_w, instr_enable_w, control_mux_w);
+    Hazard hazard(mem_readE, rt_addrE, rs_addrD, rt_addrD, mem_readM, write_reg_addrM, 
+                pc_src, jumpD, pc_enable_w, instr_enable_w, control_mux_w);
     always @(pc_enable_w, instr_enable_w, control_mux_w) begin
         pc_enable <= pc_enable_w;
         instr_enable <= instr_enable_w;
         control_mux <= control_mux_w;
     end
 
-    /* Forwarding in ID for branch instructions*/
-    wire [1:0] fw_branch1;
-    wire [1:0] fw_branch2;
-    ForwardingD fwD(reg_writeW, write_reg_addrW, reg_writeM, write_reg_addrM, 
-                rs_addrD, rt_addrD, fw_branch1, fw_branch2);
+    /* Forwarding in ID for branch and jr instructions*/
+    wire [1:0] fw_rd1;
+    wire [1:0] fw_rd2;
+    ForwardingD fwD(reg_writeE, write_reg_addrE, reg_writeM, write_reg_addrM, 
+                rs_addrD, rt_addrD, fw_rd1, fw_rd2);
 
     /* PC source for branch instructions */
     wire pc_src_w;
-    PCSrc pc_src_mux(branchD, branch_eqD, fw_branch1, fw_branch2, rsD, rtD, 
-                alu_outM, write_resultW, pc_src_w);
+    PCSrc pc_src_mux(branchD, branch_eqD, fw_rd1, fw_rd2, rsD, rtD, 
+                alu_outE, alu_outM, pc_src_w);
     always @(pc_src_w) begin
         pc_src <= pc_src_w;
     end

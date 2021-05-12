@@ -43,7 +43,7 @@ module Control
         end
 
         else
-        if (opcode == 6'h0 && funct != 6'h8) begin
+        if (opcode == 6'h0) begin
             reg_write <= 1'b1;
             mem_to_reg_write <= 1'b0;
             mem_read <= 1'b0;

@@ -1,5 +1,5 @@
 `timescale 100fs/100fs
-module Pipline
+module Pipeline
     (
         input clk
     );
@@ -68,36 +68,32 @@ module Pipline
 
     // Control unit
     wire reg_writeD;
-    wire mem_to_reg_writeD;
+    wire mem_to_regD;  // 1 if the value fed to WB comes from the data memory, 0 if from ALU result
     wire mem_readD;
     wire mem_writeD;
     wire branchD;
-    wire branch_eqD;
+    wire branch_eqD;  // 1 for beq, 0 for bne
     wire jumpD;
     wire linkD;  // For jal instruction
     wire jrD; // For jr instruction
     wire [25:0] target;
     wire [3:0] alu_controlD;
     wire alu_sourceD;
-    wire alu_source_shiftD;  // alu_source_shift = 1 if rs is replaced by shamt
-    wire reg_dstD;
+    wire alu_source_shiftD;  // alu_source_shift = 1 if rs is replaced by shamt (sll, sra, srl)
+    wire reg_dstD;  // 1 if the register to be write back is rd, 0 if it's rt
 
-    reg control_mux = 1'b1;  // used for stalling
+    reg control_mux = 1'b1;  // used for stalling and flushing
 
-    Control control(instrD, control_mux, reg_writeD, mem_to_reg_writeD, mem_readD, 
+    Control control(instrD, control_mux, reg_writeD, mem_to_regD, mem_readD, 
                     mem_writeD, branchD, branch_eqD, jumpD, linkD, jrD, target, 
                     alu_controlD, alu_sourceD, alu_source_shiftD, reg_dstD);
-
-    wire [31:0] jump_addrD;
-    Jump jump_mux(jrD, rsD, target, fw_rd1, alu_outE, alu_outM, jump_addrD);
 
     /* EX */
     // Control signal
     reg reg_writeE;
-    reg mem_to_reg_writeE;
+    reg mem_to_regE;
     reg mem_readE;
     reg mem_writeE;
-    reg branchE;
     reg [3:0] alu_controlE;
     reg alu_sourceE;
     reg alu_source_shiftE;  // alu_source_shift = 1 if rs is replaced by shamt
@@ -115,11 +111,9 @@ module Pipline
     reg [4:0] rd_addrE;
     reg signed [31:0] immE;
     reg [31:0] pcE;
-    wire zeroE;
     wire signed [31:0] alu_outE;
     wire signed [31:0] write_dataE;  // The 32-bit data to be write into the memory
     wire [4:0] write_reg_addrE;
-    wire [31:0] pc_branchE;
 
     // Forwarding multiplexer
     wire [1:0] fw_alu1;
@@ -128,15 +122,15 @@ module Pipline
                     rs_addrE, rt_addrE, fw_alu1, fw_alu2);
 
     ALU alu_ex(rsE, rtE, shamtE, alu_outM, write_resultW, rt_addrE, rd_addrE, immE, 
-            pcE, alu_controlE, alu_sourceE, alu_source_shiftE, reg_dstE, 
-            fw_alu1, fw_alu2, zeroE, alu_outE, write_dataE, write_reg_addrE, pc_branchE);
+            alu_controlE, alu_sourceE, alu_source_shiftE, reg_dstE, 
+            fw_alu1, fw_alu2, alu_outE, write_dataE, write_reg_addrE);
     
     always @(negedge clk) begin
         reg_writeE <= reg_writeD;
-        mem_to_reg_writeE <= mem_to_reg_writeD;
+        mem_to_regE <= mem_to_regD;
         mem_readE <= mem_readD;
         mem_writeE <= mem_writeD;
-        branchE <= branchD;
+        // branchE <= branchD;
         alu_controlE <= alu_controlD;
         alu_sourceE <= alu_sourceD;
         alu_source_shiftE <= alu_source_shiftD;
@@ -156,19 +150,20 @@ module Pipline
     end
 
     /* MEM */
+
     // Control signal
     reg reg_writeM;
-    reg mem_to_reg_writeM;
+    reg mem_to_regM;
     reg mem_readM;
     reg mem_writeM;
-    reg branchM;
+    // reg branchM;
 
     // Instruction
     reg [31:0] instrM;
 
     // Data
     reg [4:0] rt_addrM;
-    reg zeroM;
+    // reg zeroM;
     reg signed [31:0] alu_outM;
     reg signed [31:0] write_dataM;  // The 32-bit data to be write into the memory
     reg [4:0] write_reg_addrM;
@@ -182,11 +177,11 @@ module Pipline
     always @(negedge clk) begin
         rt_addrM <= rt_addrE;
         reg_writeM <= reg_writeE;
-        mem_to_reg_writeM <= mem_to_reg_writeE;
+        mem_to_regM <= mem_to_regE;
         mem_readM <= mem_readE;
         mem_writeM <= mem_writeE;
-        branchM <= branchE;
-        zeroM <= zeroE;
+        // branchM <= branchE;
+        // zeroM <= zeroE;
         alu_outM <= alu_outE;
         write_dataM <= write_dataE;
         write_reg_addrM <= write_reg_addrE;
@@ -195,9 +190,10 @@ module Pipline
     end
 
     /* WB */
+
     // Control signal
     reg reg_writeW;
-    reg mem_to_reg_writeW;
+    reg mem_to_regW;
 
     // Data
     reg signed [31:0] alu_outW;
@@ -205,11 +201,11 @@ module Pipline
     reg [4:0] write_reg_addrW;
     wire signed [31:0] write_resultW;
 
-    Write_back wb(alu_outW, read_dataW, mem_to_reg_writeW, write_resultW);
+    Write_back wb(alu_outW, read_dataW, mem_to_regW, write_resultW);
 
     always @(negedge clk) begin
         reg_writeW <= reg_writeM;
-        mem_to_reg_writeW <= mem_to_reg_writeM;
+        mem_to_regW <= mem_to_regM;
         alu_outW <= alu_outM;
         read_dataW <= read_dataM;
         write_reg_addrW <= write_reg_addrM;
@@ -229,12 +225,17 @@ module Pipline
     always @(pc_enable_w, instr_enable_w, control_mux_w) begin
         pc_enable <= pc_enable_w;
         instr_enable <= instr_enable_w;
+        // control_mux <= control_mux_w;
+    end
+
+    // control_mux is valid for the next instruction
+    always @(negedge clk) begin
         control_mux <= control_mux_w;
     end
 
     /* Forwarding in ID for branch and jr instructions*/
-    wire [1:0] fw_rd1;
-    wire [1:0] fw_rd2;
+    wire [1:0] fw_rd1;  // The forwarding multiplexer for RD1 for branch and jr instructions
+    wire [1:0] fw_rd2;  // The forwarding multiplexer for RD2 for branch and jr instructions
     ForwardingD fwD(reg_writeE, write_reg_addrE, reg_writeM, write_reg_addrM, 
                 rs_addrD, rt_addrD, fw_rd1, fw_rd2);
 
@@ -245,4 +246,9 @@ module Pipline
     always @(pc_src_w) begin
         pc_src <= pc_src_w;
     end
+
+    /* Jump instructions */
+    wire [31:0] jump_addrD;  // The target of jump
+    Jump jump_mux(jrD, rsD, target, fw_rd1, alu_outE, alu_outM, jump_addrD);
+
 endmodule

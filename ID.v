@@ -59,23 +59,15 @@ module Instruction_decode
     // Read
     always @(posedge clk)
     begin
-        // begin
-        //     if (register_write == 1'b1 && write_addr != 5'b0) begin
-        //     reg_value[write_addr] <= write_result;
-        //     end
-        // end
+        rs <= reg_value[rs_addr];
+        rt <= reg_value[rt_addr];
 
-        // begin
-            rs <= reg_value[rs_addr];
-            rt <= reg_value[rt_addr];
-
-            if (op == 6'hc || op == 6'hd || op == 6'he) begin
-                extended_imm <= {{16{1'b0}}, imm};
-            end
-            else begin
-                extended_imm <= {{16{imm[15]}}, imm};
-            end
-        // end
+        if (op == 6'hc || op == 6'hd || op == 6'he) begin
+            extended_imm <= {{16{1'b0}}, imm};
+        end
+        else begin
+            extended_imm <= {{16{imm[15]}}, imm};
+        end
     end
 
     always @(extended_imm) begin

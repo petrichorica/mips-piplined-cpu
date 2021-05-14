@@ -4,7 +4,7 @@ module Control
         input [31:0] instruction,
         input control_mux,
         output reg reg_write,
-        output reg mem_to_reg_write,
+        output reg mem_to_reg,  // 1 if the value fed to WB comes from the data memory, 0 if from ALU result
         output reg mem_read,
         output reg mem_write,
         output reg branch,
@@ -16,7 +16,7 @@ module Control
         output reg [3:0] alu_control,
         output reg alu_source,
         output reg alu_source_shift,  // alu_source_shift = 1 if rs is replaced by shamt.
-        output reg reg_dst
+        output reg reg_dst  // 1 if the register to be write back is rd, 0 if it's rt
     );
 
     wire [5:0] opcode;
@@ -26,9 +26,9 @@ module Control
     assign target = instruction[25:0];
 
     always @(instruction) begin
-        if (~control_mux) begin
+        if (~control_mux) begin  // Flushing
             reg_write <= 1'b0;
-            mem_to_reg_write <= 1'b0;
+            mem_to_reg <= 1'b0;
             mem_read <= 1'b0;
             mem_write <= 1'b0;
             branch <= 1'b0;
@@ -43,9 +43,9 @@ module Control
         end
 
         else
-        if (opcode == 6'h0) begin
+        if (opcode == 6'h0) begin  // R type instructions
             reg_write <= 1'b1;
-            mem_to_reg_write <= 1'b0;
+            mem_to_reg <= 1'b0;
             mem_read <= 1'b0;
             mem_write <= 1'b0;
             branch <= 1'b0;
@@ -96,6 +96,7 @@ module Control
                 6'h7: alu_control <= 4'b1010;
             endcase
 
+            // sll, sra, srl
             if (funct == 6'h0 || funct == 6'h2 || funct == 6'h3) begin
                 alu_source_shift <= 1'b1;
             end
@@ -104,13 +105,13 @@ module Control
             end
         end
 
-        else begin
+        else begin  // I type instructions and J type instructions
             alu_source_shift <= 1'b0;
             case(opcode)
                 // addi
                 6'h8: begin 
                     reg_write <= 1'b1;
-                    mem_to_reg_write <= 1'b0;
+                    mem_to_reg <= 1'b0;
                     mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
@@ -122,7 +123,7 @@ module Control
                 // addiu
                 6'h9: begin
                     reg_write <= 1'b1;
-                    mem_to_reg_write <= 1'b0;
+                    mem_to_reg <= 1'b0;
                     mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
@@ -134,7 +135,7 @@ module Control
                 // andi
                 6'hc: begin
                     reg_write <= 1'b1;
-                    mem_to_reg_write <= 1'b0;
+                    mem_to_reg <= 1'b0;
                     mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
@@ -146,7 +147,7 @@ module Control
                 // ori
                 6'hd: begin
                     reg_write <= 1'b1;
-                    mem_to_reg_write <= 1'b0;
+                    mem_to_reg <= 1'b0;
                     mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
@@ -158,7 +159,7 @@ module Control
                 // xori
                 6'he: begin
                     reg_write <= 1'b1;
-                    mem_to_reg_write <= 1'b0;
+                    mem_to_reg <= 1'b0;
                     mem_read <= 1'b0;
                     mem_write <= 1'b0;
                     branch <= 1'b0;
@@ -190,7 +191,7 @@ module Control
                 // lw
                 6'h23: begin
                     reg_write <= 1'b1;
-                    mem_to_reg_write <= 1'b1;
+                    mem_to_reg <= 1'b1;
                     mem_read <= 1'b1;
                     mem_write <= 1'b0;
                     branch <= 1'b0;

@@ -7,7 +7,7 @@ module Hazard
         input [4:0] rt_addrD,
         input mem_readM,
         input [4:0] write_reg_addrM,
-        input pc_src,
+        input pc_src,  // pc_src = 1 if branch occurs
         input jumpD,
         output reg pc_enable,
         output reg instr_enable,

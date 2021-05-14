@@ -13,9 +13,8 @@ module Jump
         input signed [31:0] alu_outM,
         output [31:0] jump_addr
     );
-    // assign jump_addr = (jr) ? rs: {{4'b0000}, target, {2'b00}};
     assign jump_addr = (jr) ? ((fw_rd1 == 2'b10) ? alu_outE:
-                            (fw_rd1 == 2'b01) ? alu_outM:
-                            rs):
-                        {{4'b0000}, target, {2'b00}};
+                    (fw_rd1 == 2'b01) ? alu_outM:
+                    rs):
+                    {{4'b0000}, target, {2'b00}};
 endmodule

@@ -94,6 +94,7 @@ module Control
                 6'h3: alu_control <= 4'b1010;
                 // srav
                 6'h7: alu_control <= 4'b1010;
+                default: alu_control <= 4'b0000;
             endcase
 
             // sll, sra, srl
@@ -229,6 +230,16 @@ module Control
                     jump <= 1'b1;
                     link <= 1'b1;
                     jr <= 1'b0;
+                end
+                default: begin
+                    reg_write <= 1'b0;
+                    mem_read <= 1'b0;
+                    mem_write <= 1'b0;
+                    branch <= 1'b0;
+                    jump <= 1'b0;
+                    alu_control <= 4'b0000;
+                    alu_source <= 1'b0;
+                    reg_dst <= 1'b0;
                 end
             endcase
             if (opcode == 6'h4) begin  // beq
